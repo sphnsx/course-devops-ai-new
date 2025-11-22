@@ -36,16 +36,17 @@ jobs:
           test -n "$RAILWAY_TOKEN" || (echo "RAILWAY_TOKEN is empty" && exit 1)
           echo "RAILWAY_TOKEN length: ${#RAILWAY_TOKEN}"
 
-      - name: Verify Railway project context
-        uses: docker://ghcr.io/railwayapp/cli:latest
+  deploy:
+    needs: build-test-deploy
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Railway auth
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          args: status
-
-      - name: Deploy via Railway CLI
-        uses: docker://ghcr.io/railwayapp/cli:latest
+        run: railway status
+      - name: Deploy
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        with:
-          args: up --service=${{ secrets.RAILWAY_SERVICE_ID }}
+        run: railway up --service=${{ secrets.RAILWAY_SERVICE_ID }}
